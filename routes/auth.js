@@ -6,7 +6,7 @@ const {
   signup,
   login,
   verifyOtp,
-  forgotPasswordOtp,
+  forgotPassword,
   resetPassword,
   resendOtp,
 } = require("../controllers/authController");
@@ -23,10 +23,10 @@ router.post("/login", login);
 router.post("/verify-otp", verifyOtp);
 
 // Forgot Password - Send OTP for password reset
-router.post("/forgot-password-otp", forgotPasswordOtp);
+router.post("/forgot-password", forgotPassword);
 
 // Reset Password - Using OTP
-router.post("/reset-password", resetPassword);
+router.post("/reset-password/:token", resetPassword);
 
 //resend otp    
 router.post("/resend-otp", resendOtp);
