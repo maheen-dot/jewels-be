@@ -1,6 +1,8 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 const sendEmail = require("../utils/sendEmail");
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret"; 
 const crypto = require("crypto");
 
 // Helper to generate OTP
@@ -74,8 +76,28 @@ const login = async (req, res) => {
         .status(403)
         .json({ message: "Account not verified. Please verify OTP." });
     }
+     // Generate JWT Token
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role || "user" },
+      JWT_SECRET,
+      { expiresIn: "7d" } // or "1h", "30m", etc.
+    );
+   console.log("Generated JWT Token:", token);  
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      sameSite: "strict",
+    });
 
-    res.status(200).json({ message: "Login successful", userId: user._id });
+    res.status(200).json({ message: "Login successful", 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role || "user", // Default to 'user' if role is not set
+      },
+      token, // Include token in response
+     });
   } catch (error) {
     console.error("Login Error:", error.message);
     res.status(500).json({ message: "Server error during login" });
