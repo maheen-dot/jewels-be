@@ -1,28 +1,53 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const cors = require("cors"); // Import the cors package
+const cors = require("cors");
+const { errorHandler } = require("./middleware/errorMiddleware"); // Add error handling
+
+// Routes
 const authRoutes = require("./routes/auth");
+const productRoutes = require('./routes/productRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const orderRoutes = require("./routes/orderRoutes");
+const editorRoutes = require('./routes/EditorRoutes');
+
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors()); // Enable CORS for all origins
+// Middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB error:", err));
+// Database Connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
+// Basic Route
 app.get("/", (req, res) => {
-  res.send("Server is running...");
+  res.send("Jewels E-Commerce API is running...");
 });
 
+// API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
+app.use('/api/Editor', editorRoutes);
 
-app.listen(process.env.PORT || 5000, () => {
-  console.log(`Server running on port http://localhost:${process.env.PORT}`);
+// 404 Handler (Must be after all routes)
+app.use((req, res, next) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
+
+// Error Handling Middleware (Must be last!)
+app.use(errorHandler);
+
+// Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
