@@ -22,7 +22,7 @@ exports.addOrUpdateItem = async (req, res, next) => {
   try {
     const userId = req.userId;
     const {
-      slug, quantity = 1, size, image, metalColors = [], gemColors = [],
+      slug, quantity = 1, size, image, metalColors = [], gemColors = [], finalPrice
     } = req.body;
 
     console.log("Adding product with slug:", slug); // log it
@@ -39,7 +39,8 @@ exports.addOrUpdateItem = async (req, res, next) => {
       productId: product._id, 
       name: product.name,
       image,
-      price: product.price,
+      //price: product.price,
+      finalPrice, 
       category: product.category,
       quantity,
       bodyColors: metalColors, 

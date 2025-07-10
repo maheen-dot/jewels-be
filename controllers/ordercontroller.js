@@ -2,46 +2,41 @@ const Order = require("../models/order");
 const Cart = require("../models/Cart");
 const ApiError = require("../utils/ApiError");
 
-exports.placeOrder = async (req, res, next) => {
+exports.checkout = async (req, res) => {
   try {
-    const { fullName, email, address, city, zipCode } = req.body;
-    const userId = req.user._id;
+    const { fullName, email, address, city, zipCode, items } = req.body;
 
-    // Basic "not empty" checks (frontend handles detailed validation)
-    if (!fullName || !email || !address || !city || !zipCode) {
-      throw new ApiError("Please fill all shipping fields", 400);
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // Get cart and validate
-    const cart = await Cart.findOne({ userId });
-    if (!cart?.items?.length) {
-      throw new ApiError("Your cart is empty", 400);
-    }
+    const totalAmount = items.reduce((acc, item) => acc + item.finalPrice * item.quantity, 0);
 
-    // Create order (no payment method needed)
-    const order = new Order({
-      userId,
-      items: cart.items, // Already contains product snapshots
-      totalAmount: cart.items.reduce(
-        (sum, item) => sum + (item.price * item.quantity), 0
-      ),
+    const newOrder = new Order({
+      userId: req.user?.userId,
       fullName,
       email,
       address,
       city,
       zipCode,
-      status: "Pending", // Default, no other options
+      items: items.map((item) => ({
+        productType: item.category,
+        productId: item._id,
+        name: item.name,
+        image: item.image,
+        quantity: item.quantity,
+        finalPrice: item.finalPrice,
+        gemColors: item.gemColors || [],
+        bodyColors: item.bodyColors || [],
+      })),
+      totalAmount
     });
 
-    await order.save();
-    await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } }); // Clear cart
+    await newOrder.save();
 
-    res.status(201).json({ 
-      success: true, 
-      message: "Order placed (Cash on Delivery)", 
-      order 
-    });
+    res.status(201).json({ message: "Order placed successfully", orderId: newOrder._id });
   } catch (error) {
-    next(error);
+    console.error("Checkout error:", error);
+    res.status(500).json({ message: "Something went wrong" });
   }
 };
