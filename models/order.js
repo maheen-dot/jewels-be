@@ -13,8 +13,8 @@ const orderItemSchema = new mongoose.Schema({
   image: String,
   quantity: Number,
   finalPrice: Number,
-  gemColors: [colorSchema],      // ✅ updated
-  bodyColors: [colorSchema],     // ✅ updated
+  gemColors: [colorSchema],      
+  bodyColors: [colorSchema],     
 });
 
 const orderSchema = new mongoose.Schema({

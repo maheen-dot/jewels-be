@@ -1,5 +1,6 @@
 const Order = require("../models/order");
 const Cart = require("../models/Cart");
+const Product = require("../models/Product"); 
 const ApiError = require("../utils/ApiError");
 
 exports.checkout = async (req, res) => {
@@ -9,8 +10,19 @@ exports.checkout = async (req, res) => {
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
+/*
+    const productIds = items.map((item) => item._id);
+    const validProducts = await Product.find({ _id: { $in: productIds } });
 
-    const totalAmount = items.reduce((acc, item) => acc + item.finalPrice * item.quantity, 0);
+    if (validProducts.length !== productIds.length) {
+      return res.status(400).json({ message: "One or more selected products do not exist" });
+    }
+      */
+
+    const totalAmount = items.reduce(
+      (acc, item) => acc + item.finalPrice * item.quantity,
+      0
+    );
 
     const newOrder = new Order({
       userId: req.user?.userId,
@@ -21,7 +33,7 @@ exports.checkout = async (req, res) => {
       zipCode,
       items: items.map((item) => ({
         productType: item.category,
-        productId: item._id,
+        productId: item.productId,
         name: item.name,
         image: item.image,
         quantity: item.quantity,
@@ -29,7 +41,7 @@ exports.checkout = async (req, res) => {
         gemColors: item.gemColors || [],
         bodyColors: item.bodyColors || [],
       })),
-      totalAmount
+      totalAmount,
     });
 
     await newOrder.save();
