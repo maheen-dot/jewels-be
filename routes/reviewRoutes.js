@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const reviewController = require("../controllers/reviewcontroller"); 
-const verifyToken = require("../middleware/verifyToken");
+const verifyToken = require("../middleware/authmiddleware");
 
 // Public: Fetch all reviews
 router.get("/get", reviewController.getAllReviews);

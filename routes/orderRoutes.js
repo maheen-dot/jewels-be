@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/ordercontroller");
-const verifyToken = require("../middleware/authMiddleware");
+const verifyToken = require("../middleware/authmiddleware");
 
 router.use(verifyToken); // Only authenticated users can order
 
