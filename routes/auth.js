@@ -9,7 +9,7 @@ const {
   forgotPassword,
   resetPassword,
   resendOtp,
-} = require("../controllers/authController");
+} = require("../controllers/authcontroller");
 
 // ==================== ROUTES ====================
 

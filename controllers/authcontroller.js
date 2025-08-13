@@ -126,69 +126,12 @@ const verifyOtp = async (req, res) => {
     res
       .status(200)
       .json({ message: "OTP verified successfully, account activated" });
+      return;
   } catch (error) {
     console.error("OTP Verification Error:", error.message);
     res.status(500).json({ message: "Server error during OTP verification" });
   }
 };
-
-// ===================== FORGOT PASSWORD - SEND OTP =====================
-{/*const forgotPasswordOtp = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    const otp = generateOTP();
-    user.otp = otp;
-    user.otpExpires = Date.now() + 5 * 60 * 1000; // 5 minutes expiration time
-
-    await user.save();
-
-    try {
-      await sendEmail(
-        email,
-        "Jewels Password Reset OTP",
-        `Your OTP is: ${otp}`
-      );
-    } catch (emailErr) {
-      console.error("Failed to send OTP email:", emailErr.message);
-      return res.status(500).json({ message: "Failed to send OTP email" });
-    }
-
-    res.status(200).json({ message: "OTP sent to email for password reset" });
-  } catch (error) {
-    console.error("Forgot Password OTP Error:", error.message);
-    res.status(500).json({ message: "Server error during OTP send" });
-  }
-};
-
-// ===================== RESET PASSWORD =====================
- const resetPassword = async (req, res) => {
-  try {
-    const { email, otp, newPassword } = req.body;
-
-    const user = await User.findOne({ email, otp });
-    if (!user) return res.status(400).json({ message: "Invalid OTP or email" });
-
-    if (user.otpExpires < Date.now()) {
-      return res.status(400).json({ message: "OTP has expired" });
-    }
-
-    user.password = await bcrypt.hash(newPassword, 10);
-    user.otp = null;
-    user.otpExpires = null;
-
-    await user.save();
-
-    res.status(200).json({ message: "Password reset successfully" });
-  } catch (error) {
-    console.error("Reset Password Error:", error.message);
-    res.status(500).json({ message: "Server error during password reset" });
-  }
-};
-*/}
 
 // ===================== FORGOT PASSWORD =====================
 const forgotPassword = async (req, res) => {

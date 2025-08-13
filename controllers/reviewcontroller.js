@@ -3,15 +3,14 @@ const Review = require("../models/Review");
 // Create a new review
 exports.createReview = async (req, res) => {
   try {
-    const { rating, comment } = req.body;
+    const {name,rating, comment } = req.body;
     const userId = req.user?.userId;
-    const userName = req.user?.name || "Anonymous";
 
-    if (!rating || !comment) {
+    if (!name || !rating || !comment) {
       return res.status(400).json({ message: "Rating and comment are required." });
     }
 
-    const newReview = new Review({ userId, userName, rating, comment });
+    const newReview = new Review({ userId, name, rating, comment });
     await newReview.save();
     res.status(201).json(newReview);
   } catch (err) {
@@ -22,7 +21,9 @@ exports.createReview = async (req, res) => {
 //  Get all reviews
 exports.getAllReviews = async (req, res) => {
   try {
-    const reviews = await Review.find().sort({ createdAt: -1 });
+    const reviews = await Review.find()
+    .populate("userId", "name email") // Populate user details
+    .sort({ createdAt: -1 });
     res.status(200).json(reviews);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch reviews." });
@@ -38,13 +39,20 @@ exports.deleteReview = async (req, res) => {
       return res.status(404).json({ message: "Review not found." });
     }
 
-    if (review.userId.toString() !== req.user.userId) {
+    const isAdmin = req.user.userRole === 'admin';
+    const isOwner = review.userId.toString() === req.user.userId;
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: "Unauthorized to delete this review." });
     }
 
-    await review.remove();
+
+    // Use findByIdAndDelete instead of remove()
+    await Review.findByIdAndDelete(req.params.id);
+
     res.status(200).json({ message: "Review deleted successfully." });
   } catch (err) {
+    console.error("Error deleting review:", err);
     res.status(500).json({ message: "Failed to delete review." });
   }
 };
