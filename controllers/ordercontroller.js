@@ -50,41 +50,21 @@ exports.checkout = async (req, res) => {
 };
 
 // GET /api/orders - Get all orders for logged-in user (or all if admin)
-exports.getOrders = async (req, res) => {
+ exports.getOrdersByUser = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
-    const skip = (Math.max(1, parseInt(page, 10)) - 1) * Math.max(1, parseInt(limit, 10));
-
-    const query = {};
-    if (req.user?.role !== "admin") {
-      if (!req.user?.userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      query.userId = req.user.userId;
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
-    if (status) query.status = status;
 
-    const [orders, total] = await Promise.all([
-      Order.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(parseInt(limit, 10))
-        .lean(),
-      Order.countDocuments(query),
-    ]);
-
-    res.json({
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
-      total,
-      totalPages: Math.ceil(total / Math.max(1, parseInt(limit, 10))),
-      data: orders,
-    });
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 }).lean();
+    res.json({ success: true, data: orders });
   } catch (error) {
-    console.error("Get orders error:", error);
+    console.error("Error fetching user orders:", error);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 
 // GET /api/orders/:id - Get single order details
 exports.getOrderById = async (req, res) => {

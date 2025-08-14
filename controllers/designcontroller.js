@@ -14,23 +14,13 @@ const saveDesign = async (req, res) => {
       image,
       model,
       description,
-      customization,
+      bodyColors = [],
+      gemColors = [],
       size,
       price
     } = req.body;
 
-    // Convert customization to separate arrays
-    const bodyColors = Array.isArray(customization?.bodyColors)
-      ? customization.bodyColors
-      : customization?.bodyColors
-        ? [customization.bodyColors]
-        : [];
-
-    const gemColors = Array.isArray(customization?.gemColors)
-      ? customization.gemColors
-      : customization?.gemColors
-        ? [customization.gemColors]
-        : [];
+   
 
     const newDesign = new Design({
       userId,
@@ -82,8 +72,44 @@ const getDesignsByUser = async (req, res) => {
   }
 };
 
+// designsController.js
+const getDesignById = async (req, res) => {
+  try {
+    const design = await Design.findById(req.params.id);
+    if (!design) {
+      return res.status(404).json({ success: false, message: "Design not found" });
+    }
+    res.status(200).json(design);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch design", error: error.message });
+  }
+};
+
+
+const deleteDesign = async (req, res) => {
+  try {
+    const design = await Design.findById(req.params.id);
+    if (!design){
+      return res.status(404).json({message:"Design not found"});
+    }
+    await Design.findByIdAndDelete(req.params.id);
+    res.status(200).json({message: "Design deleted successfully"})
+  } catch (error) {
+    console.error("Error in deleteDesign:", error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete design',
+      error: error.message
+    });
+  }
+
+
+};
+
 // Export functions
 module.exports = {
   saveDesign,
-  getDesignsByUser
+  getDesignsByUser,
+  getDesignById,
+  deleteDesign
 };

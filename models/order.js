@@ -26,7 +26,9 @@ const orderSchema = new mongoose.Schema({
   zipCode: String,
   items: [orderItemSchema],
   totalAmount: Number,
-  createdAt: { type: Date, default: Date.now },
-});
+  status: String,
+  createdAt: { type: Date, default: Date.now } // Automatically adds createdAt and updatedAt fields
+}, { timestamps: true });
+
 
 module.exports = mongoose.model("Order", orderSchema);

@@ -1,56 +1,67 @@
 const mongoose = require("mongoose");
 
+const colorDetailSchema = new mongoose.Schema({
+  id: String,             // mesh name like "Gem 1" or "Metal Body"
+  materialType: String,   // e.g., "Emerald", "Gold"
+  color: String           // e.g., "#50C878"
+}, { _id: false });
+
 const DesignSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: true
     },
+
+    // This is just a reference to the product, not unique anymore
     slug: {
       type: String,
       required: true,
-      unique: true,
-    },
-    image: {
-      type: String,
-      required: true,
-    },
-    model: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-      default: "",
+      index: true // we keep an index for faster lookups, but no unique:true
     },
 
-    // Separate body and gem colors
-    bodyColors: {
-      type: [String],
-      default: [],
+    image: {
+      type: String,
+      required: true
     },
+
+    model: {
+      type: String,
+      required: true
+    },
+
+    description: {
+      type: String,
+      default: ""
+    },
+
+    bodyColors: {
+      type: [colorDetailSchema],
+      default: []
+    },
+
     gemColors: {
-      type: [String],
-      default: [],
+      type: [colorDetailSchema],
+      default: []
     },
 
     size: {
       type: String,
-      default: null,
+      default: null
     },
+
     price: {
       type: Number,
-      required: true,
+      required: true
     },
+
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
-    },
+      required: true
+    }
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports =
