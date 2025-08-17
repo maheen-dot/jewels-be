@@ -1,5 +1,4 @@
 const Order = require("../models/order");
-const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
 
@@ -9,7 +8,7 @@ exports.checkout = async (req, res) => {
     const { fullName, email, address, city, zipCode, items } = req.body;
 
     if (!items || items.length === 0) {
-      return res.status(400).json({ message: "Cart is empty" });
+      throw new ApiError(400, "Cart is empty");
     }
 
     const totalAmount = items.reduce(
@@ -35,59 +34,161 @@ exports.checkout = async (req, res) => {
         bodyColors: item.bodyColors || [],
       })),
       totalAmount,
+      status: "Pending" // Default status
     });
 
     await newOrder.save();
 
     res.status(201).json({
+      success: true,
       message: "Order placed successfully",
       orderId: newOrder._id,
     });
   } catch (error) {
     console.error("Checkout error:", error);
-    res.status(500).json({ message: "Something went wrong" });
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Checkout failed"
+    });
   }
 };
 
-// GET /api/orders - Get all orders for logged-in user (or all if admin)
- exports.getOrdersByUser = async (req, res) => {
+// GET /api/orders - User's orders
+exports.getOrdersByUser = async (req, res) => {
   try {
     const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    if (!userId) throw new ApiError(401, "Unauthorized");
 
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 }).lean();
-    res.json({ success: true, data: orders });
+    const orders = await Order.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate("items.productId", "name price images");
+
+    res.json({ 
+      success: true, 
+      data: orders 
+    });
   } catch (error) {
     console.error("Error fetching user orders:", error);
-    res.status(500).json({ message: "Something went wrong" });
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to fetch orders"
+    });
   }
 };
 
-
-// GET /api/orders/:id - Get single order details
+// GET /api/orders/:id - Single order (user or admin)
 exports.getOrderById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const order = await Order.findById(id).lean();
+    const order = await Order.findById(req.params.id)
+      .populate("userId", "name email")
+      .populate("items.productId", "name price images");
 
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+    if (!order) throw new ApiError(404, "Order not found");
+
+    // Authorization check
+    if (req.user.role !== "admin" && order.userId._id.toString() !== req.user.userId) {
+      throw new ApiError(403, "Forbidden");
     }
 
-    if (req.user?.role !== "admin") {
-      if (!req.user?.userId || order.userId?.toString() !== req.user.userId.toString()) {
-        return res.status(403).json({ message: "Forbidden" });
+    res.json({
+      success: true,
+      data: {
+        ...order.toObject(),
+        user: order.userId // Rename for consistency
       }
+    });
+  } catch (error) {
+    console.error("Get order error:", error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to fetch order"
+    });
+  }
+};
+
+// ADMIN-ONLY ENDPOINTS =========================================
+
+// GET /api/admin/orders - All orders with search, filter, pagination
+exports.getAllOrders = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, search } = req.query;
+    const skip = (page - 1) * limit;
+
+    const query = {};
+    
+    // Status filter
+    if (status) query.status = status;
+    
+    // Search functionality
+    if (search) {
+      const isMongoId = mongoose.Types.ObjectId.isValid(search);
+      
+      query.$or = [
+        { fullName: { $regex: search, $options: "i" } }, // Case-insensitive name search
+        { email: { $regex: search, $options: "i" } },    // Case-insensitive email search
+        ...(isMongoId ? [{ _id: search }] : [])          // Search by order ID if valid ObjectId
+      ];
     }
 
-    res.json(order);
+    const [orders, total] = await Promise.all([
+      Order.find(query)
+        .populate("userId", "name email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Order.countDocuments(query)
+    ]);
+
+    res.json({
+      success: true,
+      data: orders,
+      pagination: {
+        page: Number(page),
+        pages: Math.ceil(total / limit),
+        total
+      }
+    });
   } catch (error) {
-    console.error("Get order by id error:", error);
-    if (error.name === "CastError") {
-      return res.status(400).json({ message: "Invalid order id" });
+    console.error("Admin get orders error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch orders"
+    });
+  }
+};
+
+// PUT /api/admin/orders/:id/status - Update status
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+
+    if (!validStatuses.includes(status)) {
+      throw new ApiError(400, "Invalid status value");
     }
-    res.status(500).json({ message: "Something went wrong" });
+
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true }
+    ).populate("userId", "name email");
+
+    if (!order) throw new ApiError(404, "Order not found");
+
+    res.json({
+      success: true,
+      message: "Status updated",
+      data: {
+        _id: order._id,
+        status: order.status,
+        updatedAt: order.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error("Update status error:", error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to update status"
+    });
   }
 };

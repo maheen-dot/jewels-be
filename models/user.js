@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
   resetTokenExpires: {
     type: Date,
   },
+   isActive: {
+    type: Boolean,
+    default: true
+  },
   role: {
     type: String,
     enum: ["user", "admin"],

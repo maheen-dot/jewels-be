@@ -12,7 +12,7 @@ const orderRoutes = require("./routes/orderRoutes");
 //const editorRoutes = require('./routes/EditorRoutes');
 const designRoutes = require('./routes/designRoutes'); // Import Design model
 const reviewRoutes = require('./routes/reviewRoutes');
-
+const adminRoutes = require("./routes/adminRoutes");
 dotenv.config();
 const app = express();
 
@@ -39,6 +39,7 @@ app.use("/api/orders", orderRoutes);
 //app.use('/api/Editor', editorRoutes);
 app.use("/api/designs", designRoutes); // Add design routes
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/admin", adminRoutes);
 // 404 Handler (Must be after all routes)
 app.use((req, res, next) => {
   res.status(404).json({ success: false, message: "Route not found" });
