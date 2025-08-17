@@ -272,7 +272,47 @@ const updateOrderStatus = async (req, res, next) => {
     next(error);
   }
 };
+// @desc    Get order status distribution for dashboard (Admin only)
+// @route   GET /api/admin/orders/status-distribution
+// @access  Private/Admin
+const getOrderStatusDistribution = async (req, res, next) => {
+  try {
+    const validStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
+    const [result] = await Order.aggregate([
+      {
+        $facet: {
+          statusCounts: [
+            { $match: { status: { $in: validStatuses } } },
+            { $group: { _id: "$status", count: { $sum: 1 } } }
+          ],
+          totalOrders: [
+            { $count: "total" }
+          ]
+        }
+      }
+    ]);
+
+    const total = result.totalOrders[0]?.total || 0;
+    const statusData = validStatuses.map(status => {
+      const found = result.statusCounts.find(item => item._id === status);
+      const count = found ? found.count : 0;
+      return {
+        status,
+        count,
+        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: statusData,
+      totalOrders: total, // Optional: Send total for frontend calculations
+    });
+  } catch (error) {
+    next(new ApiError(500, "Failed to fetch order status distribution"));
+  }
+};
 // Then add these to your exports
 module.exports = {
   getAllUsers,
@@ -283,5 +323,6 @@ module.exports = {
   deleteProduct,
   getAllOrders,
   getOrderDetails,
-  updateOrderStatus
+  updateOrderStatus,
+  getOrderStatusDistribution   
 };
