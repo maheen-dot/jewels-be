@@ -6,5 +6,8 @@ const verifyToken = require("../middleware/authMiddleware");
 router.use(verifyToken); // Only authenticated users can order
 
 router.post("/checkout", verifyToken, orderController.checkout); // Just one endpoint
+router.get("/get", verifyToken, orderController.getOrders);
+router.get("/myorders", verifyToken, orderController.getOrderById);
+
 
 module.exports = router;

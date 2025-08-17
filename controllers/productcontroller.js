@@ -24,30 +24,27 @@ const getAllProducts = async (_req, res) => {
 // Get trending products based on order quantity
 const getTrendingProducts = async (req, res) => {
   try {
-    const pipeline = [
-      { $unwind: "$items" },
-      {
-        $group: {
-          _id: {$toObjectId: "$items.productId"},
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { count: -1 } },
-      { $limit: 10 }, // top 10 trending
-      {
-        $lookup: {
-          from: "products",
-          localField: "_id",
-          foreignField: "_id",
-          as: "productDetails"
-        }
-      },
-      { $unwind: "$productDetails" },
-      {
-        $replaceRoot: { newRoot: "$productDetails" }
-      }
-    ];
-
+   const pipeline = [
+  { $unwind: "$items" },
+  {
+    $group: {
+      _id: { $toObjectId: "$items.productId" },
+      totalOrdered: { $sum: "$items.quantity" }  // Sum quantities instead of counting
+    }
+  },
+  { $sort: { totalOrdered: -1 } },  // Sort by total quantity ordered
+  { $limit: 5 },
+  {
+    $lookup: {
+      from: "products",
+      localField: "_id",
+      foreignField: "_id",
+      as: "productDetails"
+    }
+  },
+  { $unwind: "$productDetails" },
+  { $replaceRoot: { newRoot: "$productDetails" } }
+];
     const trending = await Order.aggregate(pipeline);
     res.status(200).json(trending);
   } catch (error) {
