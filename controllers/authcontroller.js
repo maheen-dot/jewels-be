@@ -22,7 +22,6 @@ const signup = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = generateOTP();
     const otpExpires = Date.now() + 5 * 60 * 1000; // 5 minutes expiration time
@@ -90,10 +89,15 @@ const login = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      isVerified: true,
+      message: "Login successful",
       token,
-      user,
-      message: "Login successful"
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified   
+      }
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
