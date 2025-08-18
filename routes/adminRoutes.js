@@ -1,71 +1,33 @@
 const express = require("express");
-const {
-  getAllOrders,
-  getOrderById,
-  updateOrderStatus,
-  getOrderStatusDistribution,   //  new controller
-} = require("../controllers/ordercontroller");
+const { protect, admin } = require("../middleware/authMiddleware");
+const router = express.Router();
 
+// Import controller methods
 const {
   getAllUsers,
   toggleUserStatus,
   deleteUser,
-} = require("../controllers/AdminController");
-
-const {
-  getAdminProducts,
+  getAllProducts,
   updateProduct,
   deleteProduct,
-} = require("../controllers/productcontroller");
-
-const { protect, admin } = require("../middleware/authMiddleware");
-
-const router = express.Router();
-
-/**
- * @desc    Admin Order Management Routes
- * @route   /api/admin/orders
- * @access  Private/Admin
- */
-router.route("/orders")
-  .get(protect, admin, getAllOrders);
-
-router.route("/orders/:id")
-  .get(protect, admin, getOrderById)
-  .put(protect, admin, updateOrderStatus);
-
-// ✅ New route for dashboard chart
-router.get(
-  "/orders/status-distribution",
-  protect,
-  admin,
+  getAllOrders,
+  updateOrderStatus,
   getOrderStatusDistribution
-);
+} = require("../controllers/AdminController");
 
-/**
- * @desc    Admin User Management Routes
- * @route   /api/admin/users
- * @access  Private/Admin
- */
-router.route("/users")
-  .get(protect, admin, getAllUsers);
+// Users routes
+router.get("/users", protect, admin, getAllUsers);
+router.patch("/users/:id/status", protect, admin, toggleUserStatus);
+router.delete("/users/:id", protect, admin, deleteUser);
 
-router.route("/users/:id/status")
-  .patch(protect, admin, toggleUserStatus);
+// Products routes
+router.get("/products", protect, admin, getAllProducts);
+router.put("/products/:id", protect, admin, updateProduct);
+router.delete("/products/:id", protect, admin, deleteProduct);
 
-router.route("/users/:id")
-  .delete(protect, admin, deleteUser);
-
-/**
- * @desc    Admin Product Management Routes
- * @route   /api/admin/products
- * @access  Private/Admin
- */
-router.route("/products")
-  .get(protect, admin, getAdminProducts);
-
-router.route("/products/:id")
-  .put(protect, admin, updateProduct)
-  .delete(protect, admin, deleteProduct);
+// Orders routes
+router.get("/orders", protect, admin, getAllOrders);
+router.put("/orders/:id/status", protect, admin, updateOrderStatus);
+router.get("/orders/status-distribution", protect, admin, getOrderStatusDistribution);
 
 module.exports = router;
