@@ -12,12 +12,10 @@ const DesignSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-
-    // This is just a reference to the product, not unique anymore
+    
     slug: {
       type: String,
       required: true,
-      index: true // we keep an index for faster lookups, but no unique:true
     },
 
     image: {

@@ -22,29 +22,20 @@ const orderItemSchema = new mongoose.Schema({
 }, { _id: false });
 
 const orderSchema = new mongoose.Schema({
-  userId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User", 
-    required: true 
+  orderId: {
+    type: String,
+    unique: true
   },
-  fullName: { type: String, required: true },
-  email: { type: String, required: true },
-  address: { type: String, required: true },
-  city: { type: String, required: true },
-  zipCode: { type: String, required: true },
-  items: { 
-    type: [orderItemSchema], 
-    required: true,
-    validate: [arrayLimit, "Order must have at least 1 item"]
-  },
-  totalAmount: { 
-    type: Number, 
-    required: true,
-    min: 0 
-  },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  fullName: String,
+  email: String,
+  address: String,
+  city: String,
+  zipCode: String,
+  items: [orderItemSchema],
+  totalAmount: Number,
   status: { 
     type: String, 
-    required: true,
     enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
     default: "Pending"
   },
@@ -79,5 +70,16 @@ orderSchema.virtual("formattedDate").get(function() {
     day: "numeric"
   });
 });
+
+// Middleware to generate custom orderId
+orderSchema.pre("save", async function(next) {
+  if (!this.orderId) {
+    this.orderId = "ORD-" + Date.now().toString().slice(-6);  
+    // Example: ORD-123456
+  }
+  next();
+});
+
+
 
 module.exports = mongoose.model("Order", orderSchema);
