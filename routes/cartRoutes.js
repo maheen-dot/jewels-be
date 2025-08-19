@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body, param } = require("express-validator");
-const verifyToken = require("../middleware/authMiddleware");
+const {verifyToken} = require("../middleware/authMiddleware");
 const validateCartItem = require("../middleware/cartValidation");
 
 const {

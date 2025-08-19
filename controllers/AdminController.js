@@ -4,13 +4,10 @@ const ApiError = require("../utils/ApiError");
 const Order = require("../models/order");
 
 const AdminController = {
-  // @desc    Get all users (Admin only)
-  // @route   GET /api/admin/users
-  // @access  Private/Admin
   getAllUsers: async (req, res, next) => {
     try {
       const { page = 1, limit = 10, search = '' } = req.query;
-      const skip = (page - 1) * limit;
+      const skip = (Number(page) - 1) * Number(limit);
 
       const query = {
         $or: [
@@ -33,7 +30,7 @@ const AdminController = {
         data: users,
         pagination: {
           page: Number(page),
-          pages: Math.ceil(total / limit),
+          pages: Math.ceil(total / Number(limit)),
           total
         }
       });
@@ -100,13 +97,10 @@ const AdminController = {
     }
   },
 
-  // @desc    Get all products (Admin only)
-  // @route   GET /api/admin/products
-  // @access  Private/Admin
   getAllProducts: async (req, res, next) => {
     try {
       const { page = 1, limit = 10, search = "" } = req.query;
-      const skip = (page - 1) * limit;
+      const skip = (Number(page) - 1) * Number(limit);
 
       const query = search
         ? { name: { $regex: search, $options: "i" } }
@@ -125,7 +119,7 @@ const AdminController = {
         data: products,
         pagination: {
           page: Number(page),
-          pages: Math.ceil(total / limit),
+          pages: Math.ceil(total / Number(limit)),
           total,
         },
       });
@@ -134,9 +128,6 @@ const AdminController = {
     }
   },
 
-  // @desc    Update product metadata (Admin only)
-  // @route   PATCH /api/admin/products/:id
-  // @access  Private/Admin
   updateProduct: async (req, res, next) => {
     try {
       const product = await Product.findByIdAndUpdate(
@@ -188,7 +179,7 @@ const AdminController = {
   getAllOrders: async (req, res, next) => {
     try {
       const { page = 1, limit = 10, status = '' } = req.query;
-      const skip = (page - 1) * limit;
+      const skip = (Number(page) - 1) * Number(limit);
 
       const query = status ? { status } : {};
 
@@ -207,7 +198,7 @@ const AdminController = {
         data: orders,
         pagination: {
           page: Number(page),
-          pages: Math.ceil(total / limit),
+          pages: Math.ceil(total / Number(limit)),
           total
         }
       });
@@ -287,15 +278,5 @@ const AdminController = {
     }
   }
 };
-// Remove the existing export at the bottom and replace with:
-module.exports = {
-  getAllUsers,
-  toggleUserStatus,
-  deleteUser,
-  getAllProducts,
-  updateProduct,
-  deleteProduct,
-  getAllOrders,
-  updateOrderStatus,
-  getOrderStatusDistribution
-};
+
+module.exports = AdminController;
