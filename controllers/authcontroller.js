@@ -66,6 +66,9 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
+    if (!user.isActive) {
+    return res.status(403).json({ success: false, message: "Account is deactivated. Contact support." }); 
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -83,8 +86,8 @@ const login = async (req, res) => {
     }
 
     // if verified
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+    const token = jwt.sign({ userId: user._id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
     });
 
     return res.status(200).json({
