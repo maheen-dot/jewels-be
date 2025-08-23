@@ -245,8 +245,59 @@ const resendOtp = async (req, res) => {
     res.status(500).json({ message: "Server error while resending OTP" });
   }
 };
+// ==================== GET USER PROFILE ====================
 
-// ===================== EXPORT ALL FUNCTIONS =====================
+const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select(
+      "name email address contactNumber role isVerified"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+// @desc    Update logged-in user's profile
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update allowed fields
+    user.name = req.body.name || user.name;
+    user.address = req.body.address || user.address;
+    user.contactNumber = req.body.contactNumber || user.contactNumber;
+
+    // If user also wants to update password
+    if (req.body.password) {
+      user.password = req.body.password; // hashing will apply if you use pre-save middleware
+    }
+
+    const updatedUser = await user.save();
+
+    res.json({
+      id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      address: updatedUser.address,
+      contactNumber: updatedUser.contactNumber,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -254,4 +305,8 @@ module.exports = {
   forgotPassword,
   resetPassword,
   resendOtp,
+  getUserProfile,
+  updateUserProfile, 
 };
+
+
