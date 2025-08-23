@@ -11,18 +11,20 @@ const{
   getAllOrders,
   updateOrderStatus,
   getOrderStatusDistribution,
-} = require("../controllers/adminController");
+  getDashboardData
+} = require("../controllers/AdminController");
 
 router.get("/get", protect, admin, getAllUsers);
 router.patch("/users/:id/status", protect, admin, toggleUserStatus);
 router.delete("/delete/:id", protect, admin, deleteUser);
 
-router.get("/products", protect, admin, getAllProducts);
-router.put("/products/:id", protect, admin, updateProduct);
-router.delete("/products/:id", protect, admin, deleteProduct);
+router.get("/getproducts", protect, admin, getAllProducts);
+router.put("/edit/:id", protect, admin, updateProduct);
+router.delete("/delete/products/:id", protect, admin, deleteProduct);
 
-router.get("/orders", protect, admin, getAllOrders);
-router.put("/orders/:id/status", protect, admin, updateOrderStatus);
-router.get("/orders/status-distribution", protect, admin, getOrderStatusDistribution);
+router.get("/getorders", protect, getAllOrders);
+router.put("/update/:id/status", protect, admin, updateOrderStatus);
+router.get("/status-distribution", protect, admin, getOrderStatusDistribution);
+router.get("/dashboard", protect, admin, getDashboardData)
 
 module.exports = router;

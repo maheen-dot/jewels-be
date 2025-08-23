@@ -2,11 +2,46 @@ const User = require("../models/user");
 const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
 const Order = require("../models/order");
+const mongoose = require("mongoose");
+//const Visitor = require("../models/Visitors")
+
+
+exports.getDashboardData = async (req, res) => {
+  try {
+   const totalOrders = await Order.countDocuments();
+const totalSalesAgg = await Order.aggregate([
+  { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+]);
+const totalSales = totalSalesAgg[0]?.total || 0;
+
+// Total visitors
+//const totalVisitors = await Visitor.countDocuments();
+
+// Sales Overview
+const salesOverview = await Order.aggregate([
+  { $group: { _id: { $dayOfWeek: "$createdAt" }, total: { $sum: "$totalAmount" } } },
+  { $sort: { "_id": 1 } }
+]);
+
+    
+
+    res.status(200).json({
+      totalSales,
+      totalOrders,
+     // totalVisitors,
+      salesOverview,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password -otp -resetToken -resetTokenExpires");
+    const users = await User.find().select(
+      "-password -otp -resetToken -resetTokenExpires"
+    );
     res.status(200).json({ success: true, users });
   } catch (err) {
     console.error("Error fetching users:", err);
@@ -14,17 +49,16 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-  
-exports.toggleUserStatus= async (req, res, next) => {
+exports.toggleUserStatus = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
-      throw new ApiError(404, 'User not found');
+      throw new ApiError(404, "User not found");
     }
 
-    if (user.role === 'admin') {
-      throw new ApiError(403, 'Cannot modify admin accounts');
+    if (user.role === "admin") {
+      throw new ApiError(403, "Cannot modify admin accounts");
     }
 
     user.isActive = !user.isActive;
@@ -32,36 +66,35 @@ exports.toggleUserStatus= async (req, res, next) => {
 
     res.json({
       success: true,
-      message: `User ${user.isActive ? 'activated' : 'deactivated'}`,
+      message: `User ${user.isActive ? "activated" : "deactivated"}`,
       data: {
         id: user._id,
-        isActive: user.isActive
-      }
+        isActive: user.isActive,
+      },
     });
   } catch (error) {
     next(error);
   }
 };
 
-
-exports.deleteUser= async (req, res, next) => {
+exports.deleteUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
-      throw new ApiError(404, 'User not found');
+      throw new ApiError(404, "User not found");
     }
 
-    if (user.role === 'admin') {
-      throw new ApiError(403, 'Cannot delete admin accounts');
+    if (user.role === "admin") {
+      throw new ApiError(403, "Cannot delete admin accounts");
     }
 
     await User.deleteOne({ _id: req.params.id });
 
     res.json({
       success: true,
-      message: 'User deleted successfully',
-      data: { id: req.params.id }
+      message: "User deleted successfully",
+      data: { id: req.params.id },
     });
   } catch (error) {
     next(error);
@@ -73,9 +106,7 @@ exports.getAllProducts = async (req, res, next) => {
     const { page = 1, limit = 10, search = "" } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
 
-    const query = search
-      ? { name: { $regex: search, $options: "i" } }
-      : {};
+    const query = search ? { name: { $regex: search, $options: "i" } } : {};
 
     const [products, total] = await Promise.all([
       Product.find(query)
@@ -99,13 +130,11 @@ exports.getAllProducts = async (req, res, next) => {
   }
 };
 
-exports.updateProduct= async (req, res, next) => {
+exports.updateProduct = async (req, res, next) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
 
     if (!product) {
       throw new ApiError(404, "Product not found");
@@ -121,7 +150,6 @@ exports.updateProduct= async (req, res, next) => {
   }
 };
 
-  
 exports.deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -142,87 +170,105 @@ exports.deleteProduct = async (req, res, next) => {
   }
 };
 
-exports.getAllOrders= async (req, res, next) => {
+exports.getAllOrders = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, status = '' } = req.query;
+    const { page = 1, limit = 10, status = "" } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
 
     const query = status ? { status } : {};
+        const total = await Order.countDocuments(query);
+    console.log("Fetched orders:", total); // Debugging log
 
-    const [orders, total] = await Promise.all([
-      Order.find(query)
-        .populate('user', 'name email')
-        .populate('items.product', 'name price')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Order.countDocuments(query)
-    ]);
+    const orders = await Order.find()
+     
+console.log(orders)
 
-    res.json({
+    res.status(200).json({
       success: true,
       data: orders,
       pagination: {
         page: Number(page),
         pages: Math.ceil(total / Number(limit)),
-        total
-      }
+        total,
+      },
     });
   } catch (error) {
-    next(new ApiError(500, 'Failed to fetch orders'));
+    next(new ApiError(500, "Failed to fetch orders"));
   }
 };
 
-exports.updateOrderStatus= async (req, res, next) => {
-  try {
-    const { status } = req.body;
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+const validStatuses = ["pending", "shipped", "delivered"];
+const validPaymentStatuses = ["pending", "completed", "failed"];
 
-    if (!validStatuses.includes(status)) {
-      throw new ApiError(400, 'Invalid order status');
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, paymentStatus } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid order ID" });
     }
 
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    ).populate('user', 'email');
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid order status" });
+    }
 
+    if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) {
+      return res.status(400).json({ success: false, message: "Invalid payment status" });
+    }
+
+    const order = await Order.findById(id);
     if (!order) {
-      throw new ApiError(404, 'Order not found');
+      return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    res.json({
+    if (status) order.status = status;
+    if (paymentStatus) order.paymentStatus = paymentStatus;
+
+    await order.save();
+
+    return res.status(200).json({
       success: true,
-      message: 'Order status updated successfully',
-      data: order
+      message: "Order updated successfully",
+      data: order,
     });
   } catch (error) {
-    next(error);
+    console.error("Update order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating order",
+      error: error.message,
+    });
   }
 };
 
-exports.getOrderStatusDistribution= async (req, res, next) => {
+
+
+exports.getOrderStatusDistribution = async (req, res, next) => {
   try {
-    const validStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
+    const validStatuses = [
+      "Pending",
+      "Processing",
+      "Shipped",
+      "Delivered",
+      "Cancelled",
+    ];
 
     const [result] = await Order.aggregate([
       {
         $facet: {
           statusCounts: [
             { $match: { status: { $in: validStatuses } } },
-            { $group: { _id: "$status", count: { $sum: 1 } } }
+            { $group: { _id: "$status", count: { $sum: 1 } } },
           ],
-          totalOrders: [
-            { $count: "total" }
-          ]
-        }
-      }
+          totalOrders: [{ $count: "total" }],
+        },
+      },
     ]);
 
     const total = result.totalOrders[0]?.total || 0;
-    const statusData = validStatuses.map(status => {
-      const found = result.statusCounts.find(item => item._id === status);
+    const statusData = validStatuses.map((status) => {
+      const found = result.statusCounts.find((item) => item._id === status);
       const count = found ? found.count : 0;
       return {
         status,
@@ -240,5 +286,3 @@ exports.getOrderStatusDistribution= async (req, res, next) => {
     next(new ApiError(500, "Failed to fetch order status distribution"));
   }
 };
-
-

@@ -14,7 +14,8 @@ const orderItemSchema = new mongoose.Schema({
     required: true 
   },
   name: { type: String, required: true },
-  image: { type: String, required: true },
+  slug: { type: String, required: true },
+  imagePath: { type: String, required: true },
   quantity: { type: Number, required: true, min: 1 },
   finalPrice: { type: Number, required: true, min: 0 },
   gemColors: { type: [colorSchema], default: [] },      
@@ -41,7 +42,7 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ["Pending", "Completed", "Failed", "Refunded"],
+    enum: ["Pending", "Done", "Refunded"],
     default: "Pending"
   }
 }, { 

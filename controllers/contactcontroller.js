@@ -1,4 +1,4 @@
-const Contact = require("../models/contact");
+const Contact = require("../models/Messages");
 
 // Create new contact message
 exports.createContact = async (req, res) => {
@@ -32,3 +32,29 @@ exports.getAllContacts = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+
+exports.getUnreadCount = async (req, res) => {
+  try {
+    const count = await Contact.countDocuments({ isRead: false });
+    res.status(200).json({ success: true, count });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.markAsRead = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const contact = await Contact.findById(id);
+    if (!contact) {
+      return res.status(404).json({ success: false, message: "Message not found" });
+    } 
+    contact.isRead = true;
+    await contact.save();
+    res.status(200).json({ success: true, message: "Message marked as read", data: contact });
+  } catch (error) {
+    console.error("Error marking message as read:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  } 
+  };

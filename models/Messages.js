@@ -1,4 +1,3 @@
-     models/Contact.js
 const mongoose = require("mongoose");
 
 const contactSchema = new mongoose.Schema(
@@ -19,8 +18,12 @@ const contactSchema = new mongoose.Schema(
       required: true,
       minlength: 5,
     },
+    isRead: {
+      type: Boolean,
+      default: false, // every new message is unread
+    },
   },
-  { timestamps: true } // adds createdAt & updatedAt
+  { timestamps: true }
 );
 
-module.exports = mongoose.model("Contact", contactSchema);
+module.exports = mongoose.model("Messages", contactSchema);

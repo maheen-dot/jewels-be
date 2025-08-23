@@ -4,7 +4,7 @@ const Review = require("../models/Review");
 exports.createReview = async (req, res) => {
   try {
     const {name,rating, comment } = req.body;
-    const userId = req.user?.userId;
+    const userId = req.userId;
 
     if (!name || !rating || !comment) {
       return res.status(400).json({ message: "Rating and comment are required." });
@@ -39,8 +39,8 @@ exports.deleteReview = async (req, res) => {
       return res.status(404).json({ message: "Review not found." });
     }
 
-    const isAdmin = req.user.userRole === 'admin';
-    const isOwner = review.userId.toString() === req.user.userId;
+    const isAdmin = req.userRole === 'admin';
+    const isOwner = review.userId.toString() === req.userId;
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: "Unauthorized to delete this review." });

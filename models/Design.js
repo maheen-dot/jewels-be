@@ -15,12 +15,17 @@ const DesignSchema = new mongoose.Schema(
     
     slug: {
       type: String,
-      required: true,
+      required: true
+    },
+
+    imagePath:{
+      type: String,
+      required: true
     },
 
     image: {
-      type: String,
-      required: true
+      type: Buffer,
+      required: false
     },
 
     model: {

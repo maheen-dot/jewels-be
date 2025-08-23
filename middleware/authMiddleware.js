@@ -1,19 +1,28 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-const verifyToken = (req, res) => {
+const verifyToken = (req, res, next) => {
   const authHeader = req.header("Authorization");
   if (!authHeader) {
-    throw new Error("Access denied. No token provided.");
+    return res.status(401).json({ message: "Access denied. No token provided." });
   }
 
   const parts = authHeader.split(" ");
   if (parts.length !== 2 || parts[0] !== "Bearer") {
-    throw new Error("Invalid authorization header format.");
+    return res.status(400).json({ message: "Invalid authorization header format." });
   }
 
-  const token = parts[1];
-  return jwt.verify(token, process.env.JWT_SECRET);
+  try {
+    const token = parts[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // ✅ attach userId to req
+    req.userId = decoded.userId;  
+
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
 };
 
 const protect = async (req, res, next) => {
@@ -36,8 +45,10 @@ const protect = async (req, res, next) => {
 
 // Admin-only
 const admin = (req, res, next) => {
-  if (req.user.role === "admin") next();
-  else res.status(403).json({ message: "Admin access only" });
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+  if (req.user.role !== "admin") return res.status(403).json({ message: "Admin access only" });
+  next();
 };
+
 
 module.exports = { verifyToken, protect, admin };

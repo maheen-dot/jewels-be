@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Order = require("../models/order");
 const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
@@ -17,7 +18,7 @@ exports.checkout = async (req, res) => {
     );
 
     const newOrder = new Order({
-      userId: req.user?.userId,
+      userId: req.userId,
       fullName,
       email,
       address,
@@ -27,7 +28,8 @@ exports.checkout = async (req, res) => {
         productType: item.category,
         productId: item.productId,
         name: item.name,
-        image: item.image,
+        slug: item.slug,
+        imagePath: item.imagePath,
         quantity: item.quantity,
         finalPrice: item.finalPrice,
         gemColors: item.gemColors || [],
@@ -56,7 +58,7 @@ exports.checkout = async (req, res) => {
 // GET /api/orders - User's orders
 exports.getOrdersByUser = async (req, res) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.userId;
     if (!userId) throw new ApiError(401, "Unauthorized");
 
     const orders = await Order.find({ userId })
@@ -94,7 +96,7 @@ exports.getOrderById = async (req, res) => {
       success: true,
       data: {
         ...order.toObject(),
-        user: order.userId // Rename for consistency
+        user: order.userId
       }
     });
   } catch (error) {

@@ -1,76 +1,72 @@
+const fs = require('fs/promises');
+const path = require('path');
+const sharp = require('sharp'); // optional
 const Design = require('../models/Design');
 
-// Save a new design
-const saveDesign = async (req, res) => {
+const ensureUploads = async () => {
+  const outDir = path.join(__dirname, '..', 'uploads', 'designs');
+  await fs.mkdir(outDir, { recursive: true });
+  return outDir;
+};
+
+ const saveDesign = async (req, res) => {
   try {
-    //console.log("Received Design Payload:", req.body);
-    //console.log("Decoded User ID:", req.user);
+    const userId = req.userId;
+    if (!req.file) return res.status(400).json({ success: false, message: 'Screenshot is required' });
 
-    const userId = req.user?.userId;
+    // Parse JSON strings coming from FormData
+    let { slug, name, model, description, bodyColors = [], gemColors = [], size, price } = req.body;
+    if (typeof bodyColors === 'string') { try { bodyColors = JSON.parse(bodyColors); } catch { bodyColors = []; } }
+    if (typeof gemColors === 'string')  { try { gemColors  = JSON.parse(gemColors); }  catch { gemColors = []; } }
 
-    const {
-      slug,
-      name,
-      image,
-      model,
-      description,
-      bodyColors = [],
-      gemColors = [],
-      size,
-      price
-    } = req.body;
+    const uploadsDir = await ensureUploads();
+    const base = `${userId}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
 
-   
+    // ----- OPTION A (no compression / keep PNG as-is) -----
+    // const fileName = `${base}.png`;
+    // const absPath  = path.join(uploadsDir, fileName);
+    // await fs.writeFile(absPath, req.file.buffer);
+    // const imagePath = `/uploads/designs/${fileName}`;
 
-    const newDesign = new Design({
-      userId,
-      slug,
-      name,
-      image,
-      model,
-      description,
-      bodyColors,
-      gemColors,
-      size,
-      price
+    // ----- OPTION B (optional) Convert to WebP for smaller files -----
+    const fileName = `${base}.webp`;
+    const absPath  = path.join(uploadsDir, fileName);
+    await sharp(req.file.buffer).webp({ quality: 82 }).toFile(absPath);
+    const imagePath = `/uploads/designs/${fileName}`;
+
+    const newDesign = await Design.create({
+      userId, slug, name, model, description, bodyColors, gemColors, size, price,
+      imagePath // ✅ store path only
     });
 
-    await newDesign.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Design saved successfully',
-      data: newDesign
-    });
+    return res.status(201).json({ success: true, message: 'Design saved', data: newDesign });
   } catch (error) {
-    console.error("Error in saveDesign:", error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to save design',
-      error: error.message
-    });
+    console.error('Error in saveDesign:', error);
+    res.status(500).json({ success: false, message: 'Failed to save design', error: error.message });
   }
 };
+
 
 // Get all designs saved by the authenticated user
-const getDesignsByUser = async (req, res) => {
+ const getDesignsByUser = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.userId;
 
-    const designs = await Design.find({ userId }).sort({ createdAt: -1 });
+    const designs = await Design.find({ userId })
+      .sort({ createdAt: -1 })
+      .select('name slug model description bodyColors gemColors size price imagePath createdAt') // no buffer!
+      .lean();
 
-    res.status(200).json({
-      success: true,
-      data: designs
-    });
+    // Absolute URL (optional convenience)
+    const base = `${req.protocol}://${req.get('host')}`;
+    const data = designs.map(d => ({ ...d, imageUrl: `${base}${d.imagePath}` }));
+
+    res.status(200).json({ success: true, data });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch designs',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch designs', error: error.message });
   }
 };
+
 
 // designsController.js
 const getDesignById = async (req, res) => {
