@@ -194,3 +194,40 @@ exports.updateOrderStatus = async (req, res) => {
     });
   }
 };
+// PATCH /api/orders/:id/cancel - Cancel an order by user
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status === "cancelled") {
+      return res.status(400).json({ message: "Order already cancelled" });
+    }
+
+    if (req.user?.role !== "admin") {
+      if (!req.user?.userId || order.userId.toString() !== req.user.userId.toString()) {
+        return res.status(403).json({ message: "You cannot cancel this order" });
+      }
+    }
+
+    order.status = "cancelled";
+    await order.save();
+
+    res.json({
+      message: "Order cancelled successfully",
+      orderId: order._id,
+      status: order.status,
+    });
+  } catch (error) {
+    console.error("Cancel order error:", error);
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid order id" });
+    }
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
