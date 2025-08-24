@@ -249,7 +249,7 @@ const resendOtp = async (req, res) => {
 
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select(
+    const user = await User.findById(req.userId).select(
       "name email address contactNumber role isVerified"
     );
 
@@ -263,12 +263,10 @@ const getUserProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-// @desc    Update logged-in user's profile
-// @route   PUT /api/auth/profile
-// @access  Private
+
 const updateUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

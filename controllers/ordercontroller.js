@@ -205,17 +205,11 @@ exports.cancelOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    if (order.status === "cancelled") {
+    if (order.status === "Cancelled") {
       return res.status(400).json({ message: "Order already cancelled" });
     }
 
-    if (req.user?.role !== "admin") {
-      if (!req.user?.userId || order.userId.toString() !== req.user.userId.toString()) {
-        return res.status(403).json({ message: "You cannot cancel this order" });
-      }
-    }
-
-    order.status = "cancelled";
+    order.status = "Cancelled";
     await order.save();
 
     res.json({

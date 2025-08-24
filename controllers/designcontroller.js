@@ -82,25 +82,38 @@ const getDesignById = async (req, res) => {
 };
 
 
-const deleteDesign = async (req, res) => {
+// delete controller
+deleteDesign = async (req, res) => {
   try {
-    const design = await Design.findById(req.params.id);
-    if (!design){
-      return res.status(404).json({message:"Design not found"});
+    const { id } = req.params;
+
+    // Find the design in DB
+    const design = await Design.findById(id);
+    if (!design) {
+      return res.status(404).json({ message: 'Design not found' });
     }
-    await Design.findByIdAndDelete(req.params.id);
-    res.status(200).json({message: "Design deleted successfully"})
+
+    // Build absolute path for the stored image
+    const filePath = path.join(__dirname, '..', design.imagePath);
+
+    // Try to unlink file (ignore if already deleted)
+    try {
+      await fs.unlink(filePath);
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err; // ignore file not found
+    }
+
+    // Delete from DB
+    await Design.findByIdAndDelete(id);
+
+    res.status(200).json({ message: 'Design deleted successfully' });
   } catch (error) {
-    console.error("Error in deleteDesign:", error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete design',
-      error: error.message
-    });
+    console.error('Error deleting design:', error);
+    res.status(500).json({ message: 'Error deleting design' });
   }
-
-
 };
+
+
 
 // Export functions
 module.exports = {
