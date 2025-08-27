@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { protect, admin } = require("../middleware/authMiddleware");
+const {admin, verifyToken } = require("../middleware/authMiddleware");
 const{
   getAllUsers,
   toggleUserStatus,
@@ -14,17 +14,17 @@ const{
   getDashboardData
 } = require("../controllers/AdminController");
 
-router.get("/get", protect, admin, getAllUsers);
-router.patch("/users/:id/status", protect, admin, toggleUserStatus);
-router.delete("/delete/:id", protect, admin, deleteUser);
+router.get("/get", verifyToken, admin, getAllUsers);
+router.patch("/users/:id/status", verifyToken, admin, toggleUserStatus);
+router.delete("/delete/:id", verifyToken, admin, deleteUser);
 
-router.get("/getproducts", protect, admin, getAllProducts);
-router.put("/edit/:id", protect, admin, updateProduct);
-router.delete("/delete/products/:id", protect, admin, deleteProduct);
+router.get("/getproducts", verifyToken, admin, getAllProducts);
+router.put("/edit/:id", verifyToken, admin, updateProduct);
+router.delete("/delete/products/:id", verifyToken, admin, deleteProduct);
 
-router.get("/getorders", protect, getAllOrders);
-router.put("/update/:id/status", protect, admin, updateOrderStatus);
-router.get("/status-distribution", protect, admin, getOrderStatusDistribution);
-router.get("/dashboard", protect, admin, getDashboardData)
+router.get("/getorders", verifyToken, admin, getAllOrders);
+router.put("/update/:id/status", verifyToken, admin, updateOrderStatus);
+router.get("/status-distribution", verifyToken, admin, getOrderStatusDistribution);
+router.get("/dashboard", verifyToken, admin, getDashboardData)
 
 module.exports = router;

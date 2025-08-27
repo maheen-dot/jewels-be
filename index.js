@@ -22,7 +22,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(TimeoutMiddleware());
 app.use(loggerMiddleware);
 
-// ✅ Count all **non-API page hits** as visitors
+//  Count all **non-API page hits** as visitors
 app.post("/api/visitor", (req, res) => {
   totalVisitors++;
   res.json({ success: true });
@@ -60,12 +60,12 @@ app.use("/api/contact", contactRoutes);
 
 
 
-// ✅ API endpoint to fetch visitor count
+
 app.get("/api/visitor", (req, res) => {
   res.json({ totalVisitors });
 });
 
-// ✅ Serve static images from /uploads with long caching
+// Serve static images from /uploads with long caching
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"), {
@@ -86,5 +86,5 @@ app.use(errorHandler);
 // ---------------- Server ----------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(` Server running on http://localhost:${PORT}`);
 });

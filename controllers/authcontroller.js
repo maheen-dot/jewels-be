@@ -263,9 +263,7 @@ const getUserProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-// @desc    Update logged-in user's profile
-// @route   PUT /api/auth/profile
-// @access  Private
+
 const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);

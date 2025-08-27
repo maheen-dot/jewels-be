@@ -76,7 +76,6 @@ orderSchema.virtual("formattedDate").get(function() {
 orderSchema.pre("save", async function(next) {
   if (!this.orderId) {
     this.orderId = "ORD-" + Date.now().toString().slice(-6);  
-    // Example: ORD-123456
   }
   next();
 });

@@ -1,45 +1,29 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-const verifyToken = (req, res, next) => {
-  const authHeader = req.header("Authorization");
-  if (!authHeader) {
-    return res.status(401).json({ message: "Access denied. No token provided." });
-  }
-
-  const parts = authHeader.split(" ");
-  if (parts.length !== 2 || parts[0] !== "Bearer") {
-    return res.status(400).json({ message: "Invalid authorization header format." });
-  }
-
+const verifyToken = async (req, res, next) => {
   try {
-    const token = parts[1];
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "Access denied. No token provided." });
+    }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.id;
 
-    // ✅ attach userId to req
-    req.userId = decoded.userId;  
+    // Fetch user from DB
+    const user = await User.findById(req.userId);
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    if (!user.isActive) {
+      return res.status(403).json({ message: "This account is deactivated." });
+    }
+    req.user = user; 
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
-  }
-};
-
-const protect = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ message: "No token provided" });
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.userId).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    req.user = user;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: "Unauthorized" });
+    console.error("Auth error:", err);
+    return res.status(401).json({ message: "Invalid token." });
   }
 };
 
@@ -51,4 +35,4 @@ const admin = (req, res, next) => {
 };
 
 
-module.exports = { verifyToken, protect, admin };
+module.exports = { verifyToken, admin };
