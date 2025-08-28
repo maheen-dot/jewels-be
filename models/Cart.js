@@ -1,13 +1,13 @@
 const mongoose = require("mongoose");
 
-// Shared color schema for both metal and gem colors
+// shared color schema for both metal and gem colors
 const colorDetailSchema = new mongoose.Schema({
   id: String,             // mesh name like "Gem 1" or "Metal Body"
   materialType: String,   // material like "Emerald" or "Gold"
   color: String           // hex code like "#50C878"
 }, { _id: false });
 
-// Schema for each item in the cart
+// schema for each item in the cart
 const cartItemSchema = new mongoose.Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,

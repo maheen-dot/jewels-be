@@ -10,7 +10,7 @@ const path = require("path");
 dotenv.config();
 const app = express();
 
-// ---------------- Visitor Counter ----------------
+//  Visitor Counter 
 let totalVisitors = 0;
 
 // Middleware
@@ -22,24 +22,24 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(TimeoutMiddleware());
 app.use(loggerMiddleware);
 
-//  Count all **non-API page hits** as visitors
+//  Count all non-API page hits as visitors
 app.post("/api/visitor", (req, res) => {
   totalVisitors++;
   res.json({ success: true });
 });
 
-// ---------------- Database ----------------
+// Database 
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-// ---------------- Basic Route ----------------
+//  Basic Route
 app.get("/", (req, res) => {
   res.send("Jewels E-Commerce API is running...");
 });
 
-// ---------------- Routes ----------------
+//  Routes
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/productRoutes");
 const cartRoutes = require("./routes/cartRoutes");
@@ -75,15 +75,15 @@ app.use(
   })
 );
 
-// ---------------- 404 Handler ----------------
+// 404 Handler
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found" });
 });
 
-// ---------------- Error Handling ----------------
+//  Error Handling 
 app.use(errorHandler);
 
-// ---------------- Server ----------------
+// Server 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(` Server running on http://localhost:${PORT}`);

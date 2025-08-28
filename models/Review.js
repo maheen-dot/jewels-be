@@ -12,7 +12,7 @@ const reviewSchema = new mongoose.Schema({
     },
     comment: {
         type: String,
-        required: true, // make this false if comment can be optional
+        required: true, 
     },
     rating: {
         type: Number,

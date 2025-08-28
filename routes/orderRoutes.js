@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const {checkout, getOrdersByUser, getOrderById, updateOrderStatus,cancelOrder} = require("../controllers/ordercontroller");
+const {checkout, getOrdersByUser,  updateOrderStatus,cancelOrder} = require("../controllers/ordercontroller");
 const {verifyToken, admin} = require("../middleware/authMiddleware");
 
 
 router.post("/checkout", verifyToken, checkout); 
 router.get("/get", verifyToken, getOrdersByUser);
-router.get("/myorders", verifyToken, getOrderById);
 router.put("/update/:id", verifyToken, admin,updateOrderStatus )
 router.put("/cancel/:id", verifyToken,cancelOrder )
 

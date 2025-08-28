@@ -9,7 +9,6 @@ const crypto = require("crypto");
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-// ===================== SIGNUP =====================
 const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -56,8 +55,6 @@ const signup = async (req, res) => {
   }
 };
 
-
-// ===================== LOGIN =====================
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -107,8 +104,6 @@ const login = async (req, res) => {
   }
 };
 
-
-// ===================== VERIFY OTP =====================
 const verifyOtp = async (req, res) => {
   try {
     console.log(req.body)
@@ -137,7 +132,6 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-// ===================== FORGOT PASSWORD =====================
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -167,7 +161,7 @@ const forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-// ===================== Reset PASSWORD =====================
+
 const resetPassword = async (req, res) => {
   try {
     const { token } = req.params; // from URL
@@ -192,9 +186,6 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Server error during password reset" });
   }
 };
-
-// ===================== RESEND OTP =====================
-
 
 const resendOtp = async (req, res) => {
   try {
@@ -245,8 +236,8 @@ const resendOtp = async (req, res) => {
     res.status(500).json({ message: "Server error while resending OTP" });
   }
 };
-// ==================== GET USER PROFILE ====================
 
+// user to fetch his profile 
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select(
@@ -264,6 +255,7 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+//user to update his profile
 const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);

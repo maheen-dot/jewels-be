@@ -5,11 +5,9 @@ const{
   getAllUsers,
   toggleUserStatus,
   deleteUser,
-  getAllProducts,
   updateProduct,
   deleteProduct,
   getAllOrders,
-  updateOrderStatus,
   getOrderStatusDistribution,
   getDashboardData
 } = require("../controllers/AdminController");
@@ -18,12 +16,10 @@ router.get("/get", verifyToken, admin, getAllUsers);
 router.patch("/users/:id/status", verifyToken, admin, toggleUserStatus);
 router.delete("/delete/:id", verifyToken, admin, deleteUser);
 
-router.get("/getproducts", verifyToken, admin, getAllProducts);
 router.put("/edit/:id", verifyToken, admin, updateProduct);
 router.delete("/delete/products/:id", verifyToken, admin, deleteProduct);
 
 router.get("/getorders", verifyToken, admin, getAllOrders);
-router.put("/update/:id/status", verifyToken, admin, updateOrderStatus);
 router.get("/status-distribution", verifyToken, admin, getOrderStatusDistribution);
 router.get("/dashboard", verifyToken, admin, getDashboardData)
 

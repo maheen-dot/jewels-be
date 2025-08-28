@@ -29,7 +29,8 @@ const orderSchema = new mongoose.Schema({
   },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   fullName: String,
-  email: String,
+  email: {type:String, required: true, lowercase: true, match: [/.+\@.+\..+/, "Please enter a valid email"], 
+ },
   address: String,
   city: String,
   zipCode: String,
@@ -37,7 +38,7 @@ const orderSchema = new mongoose.Schema({
   totalAmount: Number,
   status: { 
     type: String, 
-    enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+    enum: ["Pending","Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"],
     default: "Pending"
   },
   paymentStatus: {
