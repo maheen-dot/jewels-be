@@ -240,7 +240,7 @@ const resendOtp = async (req, res) => {
 // user to fetch his profile 
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select(
+    const user = await User.findById(req.userId).select(
       "name email address contactNumber role isVerified"
     );
 
@@ -258,7 +258,7 @@ const getUserProfile = async (req, res) => {
 //user to update his profile
 const updateUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

@@ -123,7 +123,7 @@ exports.cancelOrder = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    if (order.status === "cancelled") {
+    if (order.status === "Cancelled") {
       return res.status(400).json({ message: "Order already cancelled" });
     }
 
