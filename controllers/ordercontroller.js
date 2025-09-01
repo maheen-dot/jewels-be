@@ -83,10 +83,10 @@ exports.getOrdersByUser = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const validStatuses = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+    const validStatuses = ["Pending", "Confirmed","Processing", "Shipped", "Delivered", "Cancelled"];
 
     if (!validStatuses.includes(status)) {
-      throw new ApiError(400, "Invalid status value");
+      throw new ApiError("Invalid status value", 400); 
     }
 
     const order = await Order.findByIdAndUpdate(
@@ -95,9 +95,9 @@ exports.updateOrderStatus = async (req, res) => {
       { new: true, runValidators: true }
     ).populate("userId", "name email");
 
-    if (!order) throw new ApiError(404, "Order not found");
+    if (!order) throw new ApiError("Order not found", 404); 
 
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Status updated",
       data: {
@@ -114,6 +114,7 @@ exports.updateOrderStatus = async (req, res) => {
     });
   }
 };
+
 
 exports.cancelOrder = async (req, res) => {
   try {
