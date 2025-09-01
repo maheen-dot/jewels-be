@@ -21,13 +21,13 @@ const verifyToken = async (req, res, next) => {
     next();
   } catch (err) {
     console.error("Auth error:", err);
-    return res.status(401).json({ message: "Invalid token." });
+    return res.status(401).json({ message: "Invalid token. Please sign in to continue" });
   }
 };
 
 // Admin-only
 const admin = (req, res, next) => {
-  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+  if (!req.user) return res.status(401).json({ message: "Unauthorized. Please login to continue" });
   if (req.user.role !== "admin") return res.status(403).json({ message: "Admin access only" });
   next();
 };

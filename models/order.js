@@ -16,6 +16,7 @@ const orderItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   slug: { type: String, required: true },
   imagePath: { type: String, required: true },
+  model: {type: String,required: true },
   quantity: { type: Number, required: true, min: 1 },
   finalPrice: { type: Number, required: true, min: 0 },
   gemColors: { type: [colorSchema], default: [] },      
@@ -34,6 +35,11 @@ const orderSchema = new mongoose.Schema({
   address: String,
   city: String,
   zipCode: String,
+   contactNumber: {
+    type: String,
+    required: true,
+    match: [/^(\+92)[0-9]{10}$/, "Invalid contact number"],
+  },
   items: [orderItemSchema],
   totalAmount: Number,
   status: { 

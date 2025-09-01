@@ -18,6 +18,8 @@ const cartItemSchema = new mongoose.Schema({
   slug: { type: String, required: true },
 
   imagePath:{ type: String, required: true},
+  model: {type: String,required: true },
+
 
   image: { type: Buffer, required: false},
   finalPrice: { type: Number, required: true },

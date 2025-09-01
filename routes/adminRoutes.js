@@ -8,6 +8,7 @@ const{
   updateProduct,
   deleteProduct,
   getAllOrders,
+  getOrderItemByIndex,
   getOrderStatusDistribution,
   getDashboardData
 } = require("../controllers/AdminController");
@@ -20,6 +21,7 @@ router.put("/edit/:id", verifyToken, admin, updateProduct);
 router.delete("/delete/products/:id", verifyToken, admin, deleteProduct);
 
 router.get("/getorders", verifyToken, admin, getAllOrders);
+router.get("/order/:orderId/item/:itemIndex", verifyToken, admin, getOrderItemByIndex);
 router.get("/status-distribution", verifyToken, admin, getOrderStatusDistribution);
 router.get("/dashboard", verifyToken, admin, getDashboardData)
 

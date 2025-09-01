@@ -54,7 +54,7 @@ contactNumber: {
     default: "user",
   },
 }, {
-  timestamps: true, // Adds createdAt and updatedAt fields
+  timestamps: true, 
 });
 
 module.exports = mongoose.model("User", userSchema);

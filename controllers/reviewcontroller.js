@@ -22,7 +22,7 @@ exports.createReview = async (req, res) => {
 exports.getAllReviews = async (req, res) => {
   try {
     const reviews = await Review.find()
-    .populate("userId", "name email") // Populate user details
+    .populate("userId", "name email") 
     .sort({ createdAt: -1 });
     res.status(200).json(reviews);
   } catch (err) {

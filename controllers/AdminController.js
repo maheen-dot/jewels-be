@@ -140,12 +140,15 @@ exports.getAllOrders = async (req, res, next) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const query = status ? { status } : {};
-        const total = await Order.countDocuments(query);
-    console.log("Fetched orders:", total); 
 
-    const orders = await Order.find()
-     
-console.log(orders)
+    const total = await Order.countDocuments(query);
+    console.log("Fetched orders:", total);
+
+    const orders = await Order.find(query)
+      .skip(skip)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 }); 
+    console.log("Orders data:", orders);
 
     res.status(200).json({
       success: true,
@@ -161,7 +164,28 @@ console.log(orders)
   }
 };
 
+exports.getOrderItemByIndex = async (req, res, next) => {
+  try {
+    const { orderId, itemIndex } = req.params;
+    const index = parseInt(itemIndex);
 
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Check if item index is valid
+    if (index < 0 || index >= order.items.length) {
+      return res.status(404).json({ message: "Order item not found" });
+    }
+
+    const item = order.items[index];
+    res.status(200).json(item);
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getOrderStatusDistribution = async (req, res, next) => {
   try {

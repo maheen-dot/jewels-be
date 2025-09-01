@@ -45,6 +45,7 @@ exports.addOrUpdateItem = async (req, res, next) => {
     slug,
     quantity = 1,
     size,
+    model,
     bodyColors = '[]',
     gemColors = '[]',
     finalPrice
@@ -74,6 +75,7 @@ exports.addOrUpdateItem = async (req, res, next) => {
       productId: product._id, 
       name: product.name,
       imagePath,
+      model,
       slug,
       finalPrice, 
       category: product.category,

@@ -32,6 +32,10 @@ const productSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },
+  isHidden: {
+  type: Boolean,
+  default: false
+ },
   sizes: { 
     type: [Number], 
     default: [] 

@@ -6,7 +6,7 @@ const ApiError = require("../utils/ApiError");
 //checkout
 exports.checkout = async (req, res) => {
   try {
-    const { fullName, email, address, city, zipCode, items } = req.body;
+    const { fullName, email, address, city, zipCode, contactNumber, items } = req.body;
 
     if (!items || items.length === 0) {
       throw new ApiError(400, "Cart is empty");
@@ -24,19 +24,21 @@ exports.checkout = async (req, res) => {
       address,
       city,
       zipCode,
+      contactNumber,
       items: items.map((item) => ({
         productType: item.category,
         productId: item.productId,
         name: item.name,
         slug: item.slug,
         imagePath: item.imagePath,
+        model: item.model,
         quantity: item.quantity,
         finalPrice: item.finalPrice,
         gemColors: item.gemColors || [],
         bodyColors: item.bodyColors || [],
       })),
       totalAmount,
-      status: "Pending" // Default status
+      status: "Pending" // default status
     });
 
     await newOrder.save();
@@ -127,16 +129,12 @@ exports.cancelOrder = async (req, res) => {
       return res.status(400).json({ message: "Order already cancelled" });
     }
 
-    if (req.user?.role !== "admin") {
-      if (!req.user?.userId || order.userId.toString() !== req.user.userId.toString()) {
-        return res.status(403).json({ message: "You cannot cancel this order" });
-      }
-    }
     if(order.status === "Pending" || order.status === "Confirmed"){
-    order.status = "cancelled";
+    order.status = "Cancelled";
     await order.save();
 
     res.json({
+      success: true,
       message: "Order cancelled successfully",
       orderId: order._id,
       status: order.status,
