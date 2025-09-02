@@ -38,7 +38,7 @@ exports.getCart = async (req, res, next) => {
 // Add or update a cart item
 exports.addOrUpdateItem = async (req, res, next) => {
   try {
-    console.log("Request body:", req.body); // log the request body
+    console.log("Request body:", req.body); 
     const userId = req.userId;
     if (!req.file) return res.status(400).json({ success: false, message: 'Screenshot is required' });
     let {

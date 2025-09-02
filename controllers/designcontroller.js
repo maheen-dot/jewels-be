@@ -2,6 +2,8 @@ const fs = require('fs/promises');
 const path = require('path');
 const sharp = require('sharp'); 
 const Design = require('../models/Design');
+const Product = require("../models/Product");
+
 
 const ensureUploads = async () => {
   const outDir = path.join(__dirname, '..', 'uploads', 'designs');
@@ -25,8 +27,15 @@ const ensureUploads = async () => {
     const absPath  = path.join(uploadsDir, fileName);
     await sharp(req.file.buffer).webp({ quality: 82 }).toFile(absPath);
     const imagePath = `/uploads/designs/${fileName}`;
-
+    
+    
+        //  Always fetch fresh product using correct slug/link
+        const product = await Product.findOne({ link: slug }); 
+        if (!product) {
+          return res.status(404).json({ message: "Product not found" });
+        }
     const newDesign = await Design.create({
+      productId: product._id, 
       userId, slug, name, model, description, bodyColors, gemColors, size, price,
       imagePath 
     });
@@ -40,37 +49,65 @@ const ensureUploads = async () => {
 
 
 // Get all designs saved by the authenticated user
- const getDesignsByUser = async (req, res) => {
+const getDesignsByUser = async (req, res) => {
   try {
     const userId = req.userId;
 
+    // Fetch all designs for user
     const designs = await Design.find({ userId })
       .sort({ createdAt: -1 })
-      .select('name slug model description bodyColors gemColors size price imagePath createdAt') // no buffer!
+      .select('name slug model description bodyColors gemColors size price imagePath createdAt productId')
       .lean();
 
     const base = `${req.protocol}://${req.get('host')}`;
-    const data = designs.map(d => ({ ...d, imageUrl: `${base}${d.imagePath}` }));
 
-    res.status(200).json({ success: true, data });
+    // Check product existence and isHidden
+    const filteredDesigns = [];
+    for (const d of designs) {
+      if (!d.productId) continue; // skip if no product reference
+
+      const product = await Product.findById(d.productId).lean();
+      if (!product) continue; // skip if product no longer exists
+      if (product.isHidden) continue; // skip if product is hidden
+
+      filteredDesigns.push({
+        ...d,
+        imageUrl: `${base}${d.imagePath}`
+      });
+    }
+
+    res.status(200).json({ success: true, data: filteredDesigns });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch designs', error: error.message });
   }
 };
 
 
-// get specific design
+// Get specific design
 const getDesignById = async (req, res) => {
   try {
-    const design = await Design.findById(req.params.id);
+    const design = await Design.findById(req.params.id).lean();
     if (!design) {
       return res.status(404).json({ success: false, message: "Design not found" });
     }
+
+    // Check product existence and isHidden
+    if (!design.productId) {
+      return res.status(404).json({ success: false, message: "Design linked product missing" });
+    }
+
+    const product = await Product.findById(design.productId).lean();
+    if (!product || product.isHidden) {
+      return res.status(404).json({ success: false, message: "Design not available" });
+    }
+
     res.status(200).json(design);
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to fetch design", error: error.message });
   }
 };
+
+
 
 
 //delete user's design saved in his profile
